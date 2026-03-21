@@ -168,8 +168,8 @@ function buildVolumeMounts(
   const groupIpcDir = resolveGroupIpcPath(group.folder);
   fs.mkdirSync(path.join(groupIpcDir, 'messages'), { recursive: true });
   fs.mkdirSync(path.join(groupIpcDir, 'tasks'), { recursive: true });
-  fs.mkdirSync(path.join(groupIpcDir, "input"), { recursive: true });
-  fs.chmodSync(path.join(groupIpcDir, "input"), 0o777);
+  fs.mkdirSync(path.join(groupIpcDir, 'input'), { recursive: true });
+  fs.chmodSync(path.join(groupIpcDir, 'input'), 0o777);
   mounts.push({
     hostPath: groupIpcDir,
     containerPath: '/workspace/ipc',
@@ -217,7 +217,15 @@ function buildContainerArgs(
   mounts: VolumeMount[],
   containerName: string,
 ): string[] {
-  const args: string[] = ['run', '-i', '--rm', '--name', containerName, '--network', 'host'];
+  const args: string[] = [
+    'run',
+    '-i',
+    '--rm',
+    '--name',
+    containerName,
+    '--network',
+    'host',
+  ];
 
   // Pass host timezone so container's local time matches the user's
   args.push('-e', `TZ=${TIMEZONE}`);

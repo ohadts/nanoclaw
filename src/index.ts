@@ -88,7 +88,6 @@ function fixJarvisGender(text: string): string {
     .replace(/אני כאן/g, 'אני כאן');
 }
 
-
 // Re-export for backwards compatibility during refactor
 export { escapeXml, formatMessages } from './router.js';
 
@@ -210,7 +209,7 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 
   const rawPrompt = formatMessages(missedMessages, TIMEZONE);
   // Inject gender reminder so Jarvis always uses masculine self-references
-  const prompt = rawPrompt + (isMainGroup ? GENDER_REMINDER : "");
+  const prompt = rawPrompt + (isMainGroup ? GENDER_REMINDER : '');
 
   // Advance cursor so the piping path in startMessageLoop won't re-fetch
   // these messages. Save the old cursor so we can roll back on error.
@@ -452,8 +451,9 @@ async function startMessageLoop(): Promise<void> {
           );
           const messagesToSend =
             allPending.length > 0 ? allPending : groupMessages;
-          const formatted = formatMessages(messagesToSend, TIMEZONE)
-            + (isMainGroup ? GENDER_REMINDER : "");
+          const formatted =
+            formatMessages(messagesToSend, TIMEZONE) +
+            (isMainGroup ? GENDER_REMINDER : '');
 
           if (queue.sendMessage(chatJid, formatted)) {
             logger.debug(
