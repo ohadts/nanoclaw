@@ -336,6 +336,9 @@ async function runAgent(
         { group: group.name, error: output.error },
         'Container agent error',
       );
+      // Clear stale session so next attempt starts fresh (e.g. "No conversation found")
+      sessions[group.folder] = '';
+      setSession(group.folder, '');
       return 'error';
     }
 
