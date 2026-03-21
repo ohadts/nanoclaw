@@ -61,6 +61,34 @@ import { startSchedulerLoop } from './task-scheduler.js';
 import { Channel, NewMessage, RegisteredGroup } from './types.js';
 import { logger } from './logger.js';
 
+// Gender reminder injected into every main-group prompt
+const GENDER_REMINDER = fs.existsSync('./gender_reminder.txt')
+  ? fs.readFileSync('./gender_reminder.txt', 'utf-8').trimEnd()
+  : '';
+// Post-process Jarvis output to ensure masculine self-references
+// (Haiku does not reliably follow gender instructions in Hebrew)
+function fixJarvisGender(text: string): string {
+  return text
+    .replace(/אני שמחה/g, 'אני שמח')
+    .replace(/אני יודעת/g, 'אני יודע')
+    .replace(/אני זוכרת/g, 'אני זוכר')
+    .replace(/אני מבולבלת/g, 'אני מבולבל')
+    .replace(/אני אוהבת/g, 'אני אוהב')
+    .replace(/אני אוכלת/g, 'אני אוכל')
+    .replace(/אני חושבת/g, 'אני חושב')
+    .replace(/אני מרגישה/g, 'אני מרגיש')
+    .replace(/אני מקשיבה/g, 'אני מקשיב')
+    .replace(/אני שומעת/g, 'אני שומע')
+    .replace(/אני מספרת/g, 'אני מספר')
+    .replace(/אני מדברת/g, 'אני מדבר')
+    .replace(/אני נרגשת/g, 'אני נרגש')
+    .replace(/אני מוכנה/g, 'אני מוכן')
+    .replace(/אני מבינה/g, 'אני מבין')
+    .replace(/אני רוצה/g, 'אני רוצה')
+    .replace(/אני כאן/g, 'אני כאן');
+}
+
+
 // Re-export for backwards compatibility during refactor
 export { escapeXml, formatMessages } from './router.js';
 
@@ -180,7 +208,9 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
     if (!hasTrigger) return true;
   }
 
-  const prompt = formatMessages(missedMessages, TIMEZONE);
+  const rawPrompt = formatMessages(missedMessages, TIMEZONE);
+  // Inject gender reminder so Jarvis always uses masculine self-references
+  const prompt = rawPrompt + (isMainGroup ? GENDER_REMINDER : "");
 
   // Advance cursor so the piping path in startMessageLoop won't re-fetch
   // these messages. Save the old cursor so we can roll back on error.
@@ -223,7 +253,8 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
       const text = raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim();
       logger.info({ group: group.name }, `Agent output: ${raw.slice(0, 200)}`);
       if (text) {
-        await channel.sendMessage(chatJid, text);
+        const outText = isMainGroup ? fixJarvisGender(text) : text;
+        await channel.sendMessage(chatJid, outText);
         outputSentToUser = true;
       }
       // Only reset idle timer on actual results, not session-update markers (result: null)
@@ -421,7 +452,8 @@ async function startMessageLoop(): Promise<void> {
           );
           const messagesToSend =
             allPending.length > 0 ? allPending : groupMessages;
-          const formatted = formatMessages(messagesToSend, TIMEZONE);
+          const formatted = formatMessages(messagesToSend, TIMEZONE)
+            + (isMainGroup ? GENDER_REMINDER : "");
 
           if (queue.sendMessage(chatJid, formatted)) {
             logger.debug(
