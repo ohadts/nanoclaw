@@ -69,7 +69,7 @@ function escapeRegex(str: string): string {
 }
 
 export function buildTriggerPattern(trigger: string): RegExp {
-  return new RegExp(`^${escapeRegex(trigger.trim())}\\b`, 'i');
+  return new RegExp(`^${escapeRegex(trigger.trim())}(?![\\p{L}\\p{N}_])`, 'iu');
 }
 
 export const DEFAULT_TRIGGER = `@${ASSISTANT_NAME}`;
