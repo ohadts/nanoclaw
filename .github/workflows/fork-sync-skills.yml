@@ -163,7 +163,7 @@ jobs:
               body: [
                 'The automated sync with `qwibitai/nanoclaw` main failed.',
                 '',
-                'This usually means upstream made changes that conflict with this fork\'s channel code.',
+                "This usually means upstream made changes that conflict with this fork's channel code.",
                 '',
                 'To resolve manually:',
                 '```bash',
